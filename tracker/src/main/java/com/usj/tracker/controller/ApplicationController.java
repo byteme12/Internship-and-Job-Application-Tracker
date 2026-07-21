@@ -1,77 +1,62 @@
 package com.usj.tracker.controller;
 
 import com.usj.tracker.domain.Application;
-import com.usj.tracker.domain.ApplicationStatus;
+import com.usj.tracker.domain.ApplicationDocument;
+import com.usj.tracker.domain.enums.ApplicationStatus;
+import com.usj.tracker.dto.TransitionRequest;
 import com.usj.tracker.service.ApplicationService;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
-/**
- * Frontend posts JSON like:
- *   { "applicationType": "INTERNSHIP", "companyName": "...", "dateApplied": "2026-07-01",
- *     "durationMonths": 3, "stipend": 500, "university": "USJ" }
- * or
- *   { "applicationType": "FULLTIME", "companyName": "...", "dateApplied": "2026-07-01",
- *     "salary": 120000, "noticePeriodDays": 30 }
- *
- * The "applicationType" field is read by Jackson (see @JsonTypeInfo on
- * Application) BEFORE this method body ever runs, so by the time
- * `application` arrives here it's already the correct concrete subclass -
- * this controller never checks which one.
- */
 @RestController
 @RequestMapping("/api/applications")
-@CrossOrigin(origins = "*") // relax for coursework; tighten in a real deployment
 public class ApplicationController {
 
-    private final ApplicationService service;
+    private final ApplicationService applicationService;
 
-    public ApplicationController(ApplicationService service) {
-        this.service = service;
+    public ApplicationController(ApplicationService applicationService) {
+        this.applicationService = applicationService;
     }
 
     @PostMapping
-    public ResponseEntity<Application> create(@Valid @RequestBody Application application) {
-        Application saved = service.create(application);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<Application> createApplication(@RequestBody Application application) {
+        Application created = applicationService.createApplication(application);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public List<Application> findAll() {
-        return service.findAll();
+    public ResponseEntity<List<Application>> getAllApplications() {
+        return ResponseEntity.ok(applicationService.getAllApplications());
     }
 
     @GetMapping("/{id}")
-    public Application findById(@PathVariable Long id) {
-        return service.findById(id);
+    public ResponseEntity<Application> getApplicationById(@PathVariable String id) {
+        return ResponseEntity.ok(applicationService.getApplicationById(id));
     }
 
     @GetMapping("/{id}/next-states")
-    public List<ApplicationStatus> nextStates(@PathVariable Long id) {
-        return service.getValidNextStates(id);
+    public ResponseEntity<List<ApplicationStatus>> getNextStates(@PathVariable String id) {
+        return ResponseEntity.ok(applicationService.getNextStates(id));
     }
 
-    /**
-     * Body: { "status": "INTERVIEW" }
-     * Delegates straight to the polymorphic transitionTo() - if the target
-     * status isn't legal for this object's actual type/current state,
-     * InvalidTransitionException bubbles up and GlobalExceptionHandler
-     * turns it into a 409.
-     */
     @PatchMapping("/{id}/transition")
-    public Application transition(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        ApplicationStatus target = ApplicationStatus.valueOf(body.get("status"));
-        return service.transition(id, target);
+    public ResponseEntity<Application> transitionApplication(@PathVariable String id, @RequestBody TransitionRequest request) {
+        Application updated = applicationService.transitionStatus(id, request.getStatus());
+        return ResponseEntity.ok(updated);
+    }
+
+    @PostMapping("/{id}/documents")
+    public ResponseEntity<Application> addDocument(@PathVariable String id, @RequestBody ApplicationDocument document) {
+        Application updated = applicationService.addDocument(id, document);
+        return new ResponseEntity<>(updated, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.delete(id);
+    public ResponseEntity<Void> deleteApplication(@PathVariable String id) {
+        applicationService.deleteApplication(id);
         return ResponseEntity.noContent().build();
     }
 }
