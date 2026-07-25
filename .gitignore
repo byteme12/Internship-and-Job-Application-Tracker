@@ -17,6 +17,7 @@ tracker/.env
 tracker/.env.local
 *.class
 *.log
+tracker/uploads/
 
 # ==== Frontend (Node / Vite) ====
 frontend/node_modules/
