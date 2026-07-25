@@ -25,6 +25,7 @@ public abstract class Application {
     @Id
     private String id;
     private String companyName;
+    private String jobRole;
     private LocalDate dateApplied;
     private ApplicationStatus status;
     private List<ApplicationDocument> documents = new ArrayList<>();
@@ -55,6 +56,8 @@ public abstract class Application {
     public void setId(String id) { this.id = id; }
     public String getCompanyName() { return companyName; }
     public void setCompanyName(String companyName) { this.companyName = companyName; }
+    public String getJobRole() { return jobRole; }
+    public void setJobRole(String jobRole) { this.jobRole = jobRole; }
     public LocalDate getDateApplied() { return dateApplied; }
     public void setDateApplied(LocalDate dateApplied) { this.dateApplied = dateApplied; }
     public ApplicationStatus getStatus() { return status; }
